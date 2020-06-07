@@ -5,7 +5,7 @@
   "homepage": "https://github.com/euan-forrester/vue-cli-plugin-s3-deploy-cleanup",
   "repository": { 
     "url": "https://github.com/euan-forrester/vue-cli-plugin-s3-deploy-cleanup",
-    "type": "git",
+    "type": "git"
   },
   "bugs": "https://github.com/euan-forrester/vue-cli-plugin-s3-deploy-cleanup/issues",
   "keywords": [
