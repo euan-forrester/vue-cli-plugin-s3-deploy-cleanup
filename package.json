@@ -2,9 +2,6 @@
   "name": "vue-cli-plugin-s3-deploy-cleanup",
   "version": "0.0.1",
   "description": "git@github.com:euan-forrester/vue-cli-plugin-s3-deploy-cleanup.git",
-  "scripts": {
-
-  },
   "keywords": [
     "vue",
     "vuejs",
@@ -18,11 +15,6 @@
   "main": "clean-bucket.mjs",
   "license": "MIT",
   "private": false,
-  "babel": {
-    "presets": [
-      "@babel/preset-env"
-    ]
-  },
   "dependencies": {
     "aws-sdk": "2.688.0",
     "glob": "7.1.6"
