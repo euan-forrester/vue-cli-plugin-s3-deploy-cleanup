@@ -1,5 +1,5 @@
-import { S3Bucket } from './s3-bucket.mjs';
-import { FileSystem } from './file-system.mjs';
+const S3Bucket = require('./s3-bucket.js');
+const FileSystem = require('./file-system.js');
 
 const deleteMeTag = {
     Key: "DeployLifecycle",
@@ -8,15 +8,21 @@ const deleteMeTag = {
 
 class CleanBucket {
     
-    async clean(s3DeployConfig) {
+    #s3DeployConfig = null;
+
+    constructor(s3DeployConfig) {
+        this.s3DeployConfig = s3DeployConfig;
+    }
+
+    async clean() {
 
         try {
-            const s3Bucket = new S3Bucket(s3DeployConfig.bucket, s3DeployConfig.deployPath);
-            const fileSystem = new FileSystem(s3DeployConfig.assetPath);
+            const s3Bucket = new S3Bucket(this.s3DeployConfig.bucket, this.s3DeployConfig.deployPath);
+            const fileSystem = new FileSystem(this.s3DeployConfig.assetPath);
 
             const [s3Objects, fileSystemObjects] = await Promise.all([
                 s3Bucket.getBucketContents(), 
-                fileSystem.getDirectoryContents(s3DeployConfig.assetMatch)]);
+                fileSystem.getDirectoryContents(this.s3DeployConfig.assetMatch)]);
       
             console.log('Found these files in S3:');
             console.log(s3Objects);
@@ -40,4 +46,4 @@ class CleanBucket {
     }
 }
 
-export { CleanBucket };
+module.exports = CleanBucket;

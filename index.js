@@ -1,5 +1,5 @@
-import { CleanBucket } from './src/clean-bucket.mjs';
-import { error, warn } from '@vue/cli-shared-utils';
+const CleanBucket = require('./src/clean-bucket.js');
+const { error, warn } = require('@vue/cli-shared-utils');
 
 module.exports = (api, configOptions) => {
   api.registerCommand(

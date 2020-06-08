@@ -1,6 +1,6 @@
-import glob from 'glob/glob.js';
-import { promisify } from 'util';
-import fs from 'fs';
+const glob = require('glob/glob.js');
+const { promisify } = require('util');
+const fs = require('fs');
 
 const globPromise = promisify(glob); // No private static class members yet: https://github.com/tc39/proposal-static-class-features/
 
@@ -30,4 +30,4 @@ class FileSystem {
     }
 }
 
-export { FileSystem };
+module.exports = FileSystem;
