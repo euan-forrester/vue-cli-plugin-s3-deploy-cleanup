@@ -1,6 +1,6 @@
 {
   "name": "vue-cli-plugin-s3-deploy-cleanup",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "A vue-cli plugin that helps cleanup old build artifacts from S3 by tagging them for later deletion",
   "homepage": "https://github.com/euan-forrester/vue-cli-plugin-s3-deploy-cleanup",
   "repository": {
