@@ -9,7 +9,10 @@ module.exports = (api, configOptions) => {
       usage: 'vue-cli-service s3-deploy-cleanup'
     },
     async () => {
-      const options = configOptions.pluginOptions.s3Deploy;
+      const options = {
+        ...configOptions.pluginOptions.s3Deploy,
+        ...configOptions.pluginOptions.s3DeployCleanup
+      };
 
       if (!options.bucket) {
         error('Bucket name must be specified with `bucket` in vue.config.js!');
