@@ -1,6 +1,14 @@
 # vue-cli-plugin-s3-deploy-cleanup
 A vue-cli plugin that helps cleanup old build artifacts from S3 by tagging them for later deletion
 
+## Description
+
+Each time you change a file and then build your project, files with similar -- but different -- names are created. These build artifacts have a hash appended to their filenames to differentiate them. The new `index.html` file generated then points to these new files. When you deploy them by copying them to S3 the files with the old hashes remain. Over time you may build up lots of old files like this in your bucket.
+
+This plugin helps to clean up these files by tagging all the non-current files with a special value that S3 can then identify and delete at a later time. It's important to not delete them right away because a user may have some, but not all, of them cached in their web browser. If they have your old `index.html` file cached on their local machine, their web browser might go looking for the old hashes that it references, and if they're not there the user will see a 404.
+
+Thus an S3 lifecycle rule can be used to delete these tagged files after a certain number of days when you're sure that no one will have them cached.
+
 ## Instructions
 
 1. Add the `vue-cli-plugin-s3-deploy` plugin to your project: https://github.com/multiplegeorges/vue-cli-plugin-s3-deploy
@@ -53,3 +61,7 @@ resource "aws_s3_bucket" "frontend" {
 ```
 
 Note that we have 2 lifecycle rules: one to delete old versions of the same file, and one to delete files with our new tag. This is because some files may be deployed with the same name (e.g. `index.html`) and so will have old versions kept by S3 if versioning is enabled on the bucket.
+
+4. Deploy your project: `yarn deploy` or `yarn deploy && yarn deploy:cleanup`
+
+You'll see a list of files that the plugin found in S3 and in the dist directory on your local machine. Any files in S3 that are not on your local machine are assumed to be old build artifacts and will be tagged with the tag your specified. Then the lifecycle rule will delete them after the amount of time you specified.
