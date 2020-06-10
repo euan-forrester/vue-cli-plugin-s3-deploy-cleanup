@@ -22,6 +22,8 @@ module.exports = (api, configOptions) => {
         error('Asset path must be specified with `assetPath` in vue.config.js!');
       } else if (!options.assetMatch) {
         error('Asset match must be specified with `assetMatch` in vue.config.js!');
+      } else if (!options.cleanupTag) {
+        error('Tag must be specified with `cleanupTag` in vue.config.js!');
       }
 
       const cleanBucket = new CleanBucket(options);
