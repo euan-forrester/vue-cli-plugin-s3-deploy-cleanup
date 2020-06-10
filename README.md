@@ -28,21 +28,6 @@ resource "aws_s3_bucket" "frontend" {
 
   [...]
   
-  versioning {
-    enabled = true
-  }
-
-  lifecycle_rule {
-    id      = "expire-old-versions-after-N-days"
-    enabled = true
-
-    prefix = "*"
-
-    noncurrent_version_expiration {
-      days = var.days_to_keep_old_versions
-    }
-  }
-
   lifecycle_rule {
     id      = "expire-tagged-files-after-N-days"
     enabled = true
@@ -60,7 +45,7 @@ resource "aws_s3_bucket" "frontend" {
 }
 ```
 
-Note that we have 2 lifecycle rules: one to delete old versions of the same file, and one to delete files with our new tag. This is because some files may be deployed with the same name (e.g. `index.html`) and so will have old versions kept by S3 if versioning is enabled on the bucket.
+Note that we can't have versioning as well as expiration rules: https://aws.amazon.com/blogs/aws/amazon-s3-object-expiration/
 
 4. Deploy your project: `yarn deploy` or `yarn deploy && yarn deploy:cleanup`
 
