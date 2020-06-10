@@ -31,6 +31,7 @@ class CleanBucket {
             console.log('Going to tag these S3 objects that are not on the local machine:');
             console.log(s3ObjectsNotOnLocalFileSystem);
 
+            await s3Bucket.updateObjectModifiedDate(s3ObjectsNotOnLocalFileSystem, this.s3DeployConfig.acl);
             await s3Bucket.addTag(this.s3DeployConfig.cleanupTag, s3ObjectsNotOnLocalFileSystem);
 
             console.log('Finished tagging');
