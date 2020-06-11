@@ -37,11 +37,11 @@ class S3Bucket {
     async getBucketContents() {
 
         const params = {
-          Bucket:       this.bucketName,
-          Prefix:       this.deployPrefix,
-          FetchOwner:   false,
-          EncodingType: "url",
-          RequestPayer: "requester",
+            Bucket:       this.bucketName,
+            Prefix:       this.deployPrefix,
+            FetchOwner:   false,
+            EncodingType: "url",
+            RequestPayer: "requester",
         };
 
         let moreObjects = true;
@@ -63,16 +63,41 @@ class S3Bucket {
         return this.getListOfKeysFromS3Bucket(s3Objects);
     }
 
-    async addTag(tag, s3Paths) {
+    async filterOutObjectsWithTag(s3Paths, tag) {
+        const keepObjectPromises = s3Paths.map(async basePath => {
+            const params = {
+                Bucket:   this.bucketName, 
+                Key:      this.deployPrefix + basePath,
+            };
+
+            const s3ObjectTags = await s3.getObjectTagging(params).promise();
+
+            let keepObject = true;
+
+            s3ObjectTags['TagSet'].forEach(objectTag => {
+                if ((objectTag['Key'].localeCompare(tag.Key) === 0) && (objectTag['Value'].localeCompare(tag.Value) === 0)) {
+                    keepObject = false;
+                }
+            });
+
+            return keepObject;
+        });
+
+        const keepObjectResults = await Promise.all(keepObjectPromises);
+
+        return s3Paths.filter((basePath, index) => keepObjectResults[index]);
+    }
+
+    async addTag(s3Paths, tag) {
 
         // We can only add tags to one S3 object at a time, so do them all in parallel
         const addTagPromises = s3Paths.map(basePath => {
             const params = {
-              Bucket:   this.bucketName, 
-              Key:      this.deployPrefix + basePath, 
-              Tagging: {
-                TagSet: [ tag ]
-              }
+                Bucket:   this.bucketName, 
+                Key:      this.deployPrefix + basePath, 
+                Tagging: {
+                    TagSet: [ tag ]
+                }
             };
             return s3.putObjectTagging(params).promise();
         });
@@ -86,19 +111,23 @@ class S3Bucket {
         // which is not updated when adding (or removing) a tag. We can force the update of this date
         // by copying the object onto itself: https://stackoverflow.com/questions/13455168/is-there-a-way-to-touch-file-in-amazon-s3
         // (thus the need for passing in an ACL: it's the only attribute of the object that isn't copied by default)
-        // Npte the need to update the object's metadata.
+        //
+        // Note the need to update the object's metadata (to copy an object over itself we must change one of 
+        // the object's metadata, storage class, website redirect location or encryption attributes)
+        //
         // Also we will just copy all of the object's tags. We could save a call by setting the tag here rather than with addTag() above,
         // but that would mean overwriting the existing tags on the object. Better to be safe by copying them all and adding ours later.
+
         const copyObjectPromises = s3Paths.map(basePath => {
             const params = {
-              Bucket:       this.bucketName, 
-              CopySource:   encodeURI(this.bucketName + '/' + this.deployPrefix + basePath),
-              Key:          this.deployPrefix + basePath, 
-              ACL:          acl,
-              MetadataDirective: "REPLACE",
-              Metadata: {
-                "IsCopy": "true"
-              }
+                Bucket:       this.bucketName, 
+                CopySource:   encodeURI(this.bucketName + '/' + this.deployPrefix + basePath),
+                Key:          this.deployPrefix + basePath, 
+                ACL:          acl,
+                MetadataDirective: "REPLACE",
+                Metadata: {
+                    "IsCopy": "true"
+                }
             };
             return s3.copyObject(params).promise();
         });
