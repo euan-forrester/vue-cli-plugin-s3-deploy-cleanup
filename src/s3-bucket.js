@@ -12,7 +12,7 @@ class S3Bucket {
     }
 
     getListOfKeysFromS3Bucket(s3Objects) {
-        return s3Objects['Contents'].map(object => object['Key']);
+        return s3Objects.map(object => object['Key']);
     }
 
     getDeployPrefix(deployPath) {
@@ -37,33 +37,102 @@ class S3Bucket {
     async getBucketContents() {
 
         const params = {
-          Bucket: this.bucketName,
-          Prefix: this.deployPrefix,
-          FetchOwner: false,
-          EncodingType: "url",
-          RequestPayer: "requester",
+            Bucket:       this.bucketName,
+            Prefix:       this.deployPrefix,
+            FetchOwner:   false,
+            EncodingType: "url",
+            RequestPayer: "requester",
         };
 
-        const s3Objects = await s3.listObjectsV2(params).promise();
+        let moreObjects = true;
+        let s3Objects = [];
+
+        while (moreObjects) {
+
+            const listObjectsResult = await s3.listObjectsV2(params).promise();
+
+            if (listObjectsResult['IsTruncated']) {
+                params.ContinuationToken = listObjectsResult['NextContinuationToken'];
+            } else {
+                moreObjects = false;
+            }
+
+            s3Objects = s3Objects.concat(listObjectsResult['Contents']);
+        }
 
         return this.getListOfKeysFromS3Bucket(s3Objects);
     }
 
-    async addTag(tag, s3Paths) {
+    async filterOutObjectsWithTag(s3Paths, tag) {
+        const keepObjectPromises = s3Paths.map(async basePath => {
+            const params = {
+                Bucket:   this.bucketName, 
+                Key:      this.deployPrefix + basePath,
+            };
+
+            const s3ObjectTags = await s3.getObjectTagging(params).promise();
+
+            let keepObject = true;
+
+            s3ObjectTags['TagSet'].forEach(objectTag => {
+                if ((objectTag['Key'].localeCompare(tag.Key) === 0) && (objectTag['Value'].localeCompare(tag.Value) === 0)) {
+                    keepObject = false;
+                }
+            });
+
+            return keepObject;
+        });
+
+        const keepObjectResults = await Promise.all(keepObjectPromises);
+
+        return s3Paths.filter((basePath, index) => keepObjectResults[index]);
+    }
+
+    async addTag(s3Paths, tag) {
 
         // We can only add tags to one S3 object at a time, so do them all in parallel
         const addTagPromises = s3Paths.map(basePath => {
             const params = {
-              Bucket: this.bucketName, 
-              Key: this.deployPrefix + basePath, 
-              Tagging: {
-                TagSet: [ tag ]
-              }
+                Bucket:   this.bucketName, 
+                Key:      this.deployPrefix + basePath, 
+                Tagging: {
+                    TagSet: [ tag ]
+                }
             };
             return s3.putObjectTagging(params).promise();
         });
 
         return Promise.all(addTagPromises);
+    }
+
+    async updateObjectModifiedDate(s3Paths, acl) {
+
+        // Lifecycle rules in S3 only work based off of the object's last modified date,
+        // which is not updated when adding (or removing) a tag. We can force the update of this date
+        // by copying the object onto itself: https://stackoverflow.com/questions/13455168/is-there-a-way-to-touch-file-in-amazon-s3
+        // (thus the need for passing in an ACL: it's the only attribute of the object that isn't copied by default)
+        //
+        // Note the need to update the object's metadata (to copy an object over itself we must change one of 
+        // the object's metadata, storage class, website redirect location or encryption attributes)
+        //
+        // Also we will just copy all of the object's tags. We could save a call by setting the tag here rather than with addTag() above,
+        // but that would mean overwriting the existing tags on the object. Better to be safe by copying them all and adding ours later.
+
+        const copyObjectPromises = s3Paths.map(basePath => {
+            const params = {
+                Bucket:       this.bucketName, 
+                CopySource:   encodeURI(this.bucketName + '/' + this.deployPrefix + basePath),
+                Key:          this.deployPrefix + basePath, 
+                ACL:          acl,
+                MetadataDirective: "REPLACE",
+                Metadata: {
+                    "IsCopy": "true"
+                }
+            };
+            return s3.copyObject(params).promise();
+        });
+
+        return Promise.all(copyObjectPromises);
     }
 }
 

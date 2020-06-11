@@ -64,4 +64,4 @@ Note that we have 2 lifecycle rules: one to delete old versions of the same file
 
 4. Deploy your project: `yarn deploy` or `yarn deploy && yarn deploy:cleanup`
 
-You'll see a list of files that the plugin found in S3 and in the dist directory on your local machine. Any files in S3 that are not on your local machine are assumed to be old build artifacts and will be tagged with the tag your specified. Then the lifecycle rule will delete them after the amount of time you specified.
+You'll see a list of files that the plugin found in S3 and in the dist directory on your local machine. Any files in S3 that are not on your local machine are assumed to be old build artifacts and will be tagged with the tag your specified. They will also be copied in place so that their last modified date is updated (the lifecycle rule calculates time based on the object's last modified date, and tagging the object doesn't update this date). Their metadata will be replaced during this copy operation. Once this is done the lifecycle rule will delete them after the amount of time you specified.
