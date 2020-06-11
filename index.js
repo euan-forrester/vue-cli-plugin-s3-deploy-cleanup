@@ -14,6 +14,24 @@ module.exports = (api, configOptions) => {
         ...configOptions.pluginOptions.s3DeployCleanup
       };
 
+      const env_override_prefix = 'VUE_APP_S3D';
+
+      options.bucket      = process.env[`${env_override_prefix}_BUCKET`]      || options.bucket;
+      options.deployPath  = process.env[`${env_override_prefix}_DEPLOY_PATH`] || options.deployPath;
+      options.assetPath   = process.env[`${env_override_prefix}_ASSET_PATH`]  || options.assetPath;
+      options.assetMatch  = process.env[`${env_override_prefix}_ASSET_MATCH`] || options.assetMatch;
+      options.acl         = process.env[`${env_override_prefix}_ACL`]         || options.acl;
+
+      const override_cleanup_tag_key    = process.env[`${env_override_prefix}_CLEANUP_TAG_KEY`];
+      const override_cleanup_tag_value  = process.env[`${env_override_prefix}_CLEANUP_TAG_VALUE`];
+
+      if (override_cleanup_tag_key && override_cleanup_tag_value) {
+        options.cleanupTag = {
+          Key:    override_cleanup_tag_key,
+          Value:  override_cleanup_tag_value
+        };
+      }
+
       if (!options.bucket) {
         error('Bucket name must be specified with `bucket` in vue.config.js!');
       } else if (!options.deployPath) {
@@ -22,9 +40,11 @@ module.exports = (api, configOptions) => {
         error('Asset path must be specified with `assetPath` in vue.config.js!');
       } else if (!options.assetMatch) {
         error('Asset match must be specified with `assetMatch` in vue.config.js!');
+      } else if (!options.acl) {
+        error('Access control list must be specified with `acl` in vue.config.js!');
       } else if (!options.cleanupTag) {
         error('Tag must be specified with `cleanupTag` in vue.config.js!');
-      }
+      } 
 
       const cleanBucket = new CleanBucket(options);
 
