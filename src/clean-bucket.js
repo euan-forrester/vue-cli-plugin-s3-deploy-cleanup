@@ -28,10 +28,19 @@ class CleanBucket {
             // Note that S3 paths are case-sensitive. This check is case-sensitive too. Not sure if this will cause issues in practice.
             const s3ObjectsNotOnLocalFileSystem = s3Objects.filter(x => fileSystemObjects.indexOf(x) < 0); // Note that fileSystemObjects should be fairly short, so even though this is O(N*M), M is at least small
 
-            console.log('Going to tag these S3 objects that are not on the local machine:');
+            console.log('These S3 objects are not on the local machine:');
             console.log(s3ObjectsNotOnLocalFileSystem);
 
-            await s3Bucket.addTag(this.s3DeployConfig.cleanupTag, s3ObjectsNotOnLocalFileSystem);
+            // Note that we don't want to keep re-tagging the same objects over and over. That'll keep updating the last modified date,
+            // and if we do this often enough then the object will never be deleted by S3 because it'll never be "old enough".
+
+            const s3ObjectsThatNeedTagged = await s3Bucket.filterOutObjectsWithTag(s3ObjectsNotOnLocalFileSystem, this.s3DeployConfig.cleanupTag);
+
+            console.log('These S3 objects are not yet tagged:');
+            console.log(s3ObjectsThatNeedTagged);
+
+            await s3Bucket.updateObjectModifiedDate(s3ObjectsThatNeedTagged, this.s3DeployConfig.acl);
+            await s3Bucket.addTag(s3ObjectsThatNeedTagged, this.s3DeployConfig.cleanupTag);
 
             console.log('Finished tagging');
 
