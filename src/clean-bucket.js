@@ -19,10 +19,10 @@ class CleanBucket {
                 s3Bucket.getBucketContents(), 
                 fileSystem.getDirectoryContents(this.s3DeployConfig.assetMatch)]);
       
-            console.log('Found these files in S3:');
+            console.log(`Found these files in S3 in bucket '${this.s3DeployConfig.bucket}':`);
             console.log(s3Objects);
 
-            console.log('Found these files on the local machine:');
+            console.log(`Found these files on the local machine in directory '${this.s3DeployConfig.assetPath}':`);
             console.log(fileSystemObjects);
 
             // Note that S3 paths are case-sensitive. This check is case-sensitive too. Not sure if this will cause issues in practice.

@@ -62,6 +62,19 @@ resource "aws_s3_bucket" "frontend" {
 
 Note that we have 2 lifecycle rules: one to delete old versions of the same file, and one to delete files with our new tag. This is because some files may be deployed with the same name (e.g. `index.html`) and so will have old versions kept by S3 if versioning is enabled on the bucket.
 
-4. Deploy your project: `yarn deploy` or `yarn deploy && yarn deploy:cleanup`
+4. Deploy your project: `yarn deploy && yarn deploy:cleanup`
 
 You'll see a list of files that the plugin found in S3 and in the dist directory on your local machine. Any files in S3 that are not on your local machine are assumed to be old build artifacts and will be tagged with the tag your specified. They will also be copied in place so that their last modified date is updated (the lifecycle rule calculates time based on the object's last modified date, and tagging the object doesn't update this date). Their metadata will be replaced during this copy operation. Once this is done the lifecycle rule will delete them after the amount of time you specified.
+
+## Environments
+
+Note that you can override the cleanup tag on a per-environment basis by adding the values:
+
+```
+VUE_APP_S3D_CLEANUP_TAG_KEY = <something>
+VUE_APP_S3D_CLEANUP_TAG_VALUE = <something>
+```
+
+To your `.env.<environment>` file, and then invoking the deploy with `yarn deploy --mode=<environment> && yarn deploy:cleanup --mode=<environment>`
+
+This is the same file that holds any overrides for the `vue-cli-plugin-s3-deploy` plugin.
