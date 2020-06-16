@@ -19,10 +19,10 @@ class CleanBucket {
                 s3Bucket.getBucketContents(), 
                 fileSystem.getDirectoryContents(this.s3DeployConfig.assetMatch)]);
       
-            console.log(`Found these files in S3 in bucket '${this.s3DeployConfig.bucket}':`);
+            console.log(`Found these files in S3 in bucket '${this.s3DeployConfig.bucket}' in the path '${this.s3DeployConfig.deployPath}':`);
             console.log(s3Objects);
 
-            console.log(`Found these files on the local machine in directory '${this.s3DeployConfig.assetPath}':`);
+            console.log(`Found these files on the local machine in the directory '${this.s3DeployConfig.assetPath}':`);
             console.log(fileSystemObjects);
 
             // Note that S3 paths are case-sensitive. This check is case-sensitive too. Not sure if this will cause issues in practice.
@@ -36,7 +36,7 @@ class CleanBucket {
 
             const s3ObjectsThatNeedTagged = await s3Bucket.filterOutObjectsWithTag(s3ObjectsNotOnLocalFileSystem, this.s3DeployConfig.cleanupTag);
 
-            console.log('These S3 objects are not yet tagged:');
+            console.log('Of those, these S3 objects are not yet tagged and will be tagged:');
             console.log(s3ObjectsThatNeedTagged);
 
             await s3Bucket.updateObjectModifiedDate(s3ObjectsThatNeedTagged, this.s3DeployConfig.acl);
