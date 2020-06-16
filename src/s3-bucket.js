@@ -21,7 +21,7 @@ class S3Bucket {
         //  - If there's a prefix it needs to end with a '/': 'euan' => 'euan/'
         //  - If it's just a '/' then it should be empty: '/' = ''
 
-        let deployPrefix = (' ' + deployPath).slice(1); // Force a copy: https://stackoverflow.com/questions/31712808/how-to-force-javascript-to-deep-copy-a-string
+        let deployPrefix = deployPath;
 
         if (!deployPrefix.endsWith('/')) {
             deployPrefix += '/';
@@ -32,6 +32,16 @@ class S3Bucket {
         }
 
         return deployPrefix;
+    }
+
+    removeDeployPrefixFromKeys(listOfKeys) {
+        return listOfKeys.map(key => {
+            if (key.startsWith(this.deployPrefix)) {
+                return key.substr(this.deployPrefix.length);
+            } else {
+                return key;
+            }
+        });
     }
 
     async getBucketContents() {
@@ -60,10 +70,13 @@ class S3Bucket {
             s3Objects = s3Objects.concat(listObjectsResult['Contents']);
         }
 
-        return this.getListOfKeysFromS3Bucket(s3Objects);
+        const s3Keys = this.getListOfKeysFromS3Bucket(s3Objects);
+
+        return this.removeDeployPrefixFromKeys(s3Keys);
     }
 
     async filterOutObjectsWithTag(s3Paths, tag) {
+
         const keepObjectPromises = s3Paths.map(async basePath => {
             const params = {
                 Bucket:   this.bucketName, 
@@ -90,7 +103,6 @@ class S3Bucket {
 
     async addTag(s3Paths, tag) {
 
-        // We can only add tags to one S3 object at a time, so do them all in parallel
         const addTagPromises = s3Paths.map(basePath => {
             const params = {
                 Bucket:   this.bucketName, 
@@ -133,6 +145,20 @@ class S3Bucket {
         });
 
         return Promise.all(copyObjectPromises);
+    }
+
+    // Debug method to get the expiration information about each object
+    async getObject(s3Paths) {
+
+        const getObjectPromises = s3Paths.map(basePath => {
+            const params = {
+                Bucket:   this.bucketName, 
+                Key:      this.deployPrefix + basePath, 
+            };
+            return s3.getObject(params).promise();
+        });
+
+        return Promise.all(getObjectPromises);
     }
 }
 

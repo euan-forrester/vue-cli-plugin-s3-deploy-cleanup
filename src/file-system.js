@@ -8,7 +8,7 @@ class FileSystem {
     #directory = '';
 
     constructor(assetPath) {
-        this.directory = assetPath + '/';
+        this.directory = assetPath.endsWith('/') ? assetPath : assetPath + '/';
     }
 
     filterOutDirectories(listOfPaths) {
