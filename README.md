@@ -36,8 +36,6 @@ resource "aws_s3_bucket" "frontend" {
     id      = "expire-old-versions-after-N-days"
     enabled = true
 
-    prefix = "*"
-
     noncurrent_version_expiration {
       days = var.days_to_keep_old_versions
     }
@@ -46,8 +44,6 @@ resource "aws_s3_bucket" "frontend" {
   lifecycle_rule {
     id      = "expire-tagged-files-after-N-days"
     enabled = true
-
-    prefix = "*"
 
     tags = {
       "DeployLifecycle" = "DeleteMe"
