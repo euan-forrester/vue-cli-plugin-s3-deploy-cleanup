@@ -17,7 +17,7 @@ Thus an S3 lifecycle rule can be used to delete these tagged files after a certa
 
 An S3 tag has a Key and a Value, so you will be prompted for both during the installation phase. Or you can accept the default Key = "DeployLifecycle" and Value = "DeleteMe".
 
-You will also be asked whether to change your npm/yarn `deploy` script to include calling this plugin after the deploy plugin. Either way, you'll also get a `deploy:cleanup` script added that just invokes this plugin.
+You'll also get a `deploy:cleanup` npm script added that invokes this plugin.
 
 3. Change your S3 bucket definition to include a lifecycle rule that will delete all items with the tag above in N days.
 
