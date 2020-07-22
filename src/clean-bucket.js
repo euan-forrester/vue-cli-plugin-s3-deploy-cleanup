@@ -12,7 +12,9 @@ class CleanBucket {
     async clean() {
 
         try {
-            const s3Bucket = new S3Bucket(this.s3DeployConfig.bucket, this.s3DeployConfig.deployPath);
+            console.log(`Using AWS profile '${this.s3DeployConfig.awsProfile}'`);
+
+            const s3Bucket = new S3Bucket(this.s3DeployConfig.bucket, this.s3DeployConfig.deployPath, this.s3DeployConfig.awsProfile, this.s3DeployConfig.region, this.s3DeployConfig.endpoint);
             const fileSystem = new FileSystem(this.s3DeployConfig.assetPath);
 
             const [s3Objects, fileSystemObjects] = await Promise.all([
