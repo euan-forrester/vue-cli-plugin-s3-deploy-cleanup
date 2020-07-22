@@ -1,14 +1,35 @@
 const S3 = require('aws-sdk/clients/s3');
-
-const s3 = new S3();
+const AWS = require('aws-sdk');
 
 class S3Bucket {
     #bucketName = '';
     #deployPrefix = '';
+    #s3 = null;
 
-    constructor(bucketName, deployPath) {
+    constructor(bucketName, deployPath, awsProfile, region, endpoint) {
         this.bucketName = bucketName;
         this.deployPrefix = this.getDeployPrefix(deployPath);
+        
+        if (awsProfile !== 'default') {
+            // https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/loading-node-credentials-shared.html
+            const credentials = new AWS.SharedIniFileCredentials({
+                profile: awsProfile
+            });
+
+            AWS.config.credentials = credentials;
+        }
+
+        const s3Config = {}; // https://docs.aws.amazon.com/AWSJavaScriptSDK/latest/AWS/S3.html#constructor-property
+
+        if (region) {
+            s3Config.region = region;
+        }
+
+        if (endpoint) {
+            s3Config.endpoint = endpoint;
+        }
+
+        this.s3 = new S3(s3Config);
     }
 
     getListOfKeysFromS3Bucket(s3Objects) {
@@ -59,7 +80,7 @@ class S3Bucket {
 
         while (moreObjects) {
 
-            const listObjectsResult = await s3.listObjectsV2(params).promise();
+            const listObjectsResult = await this.s3.listObjectsV2(params).promise();
 
             if (listObjectsResult['IsTruncated']) {
                 params.ContinuationToken = listObjectsResult['NextContinuationToken'];
@@ -83,7 +104,7 @@ class S3Bucket {
                 Key:      this.deployPrefix + basePath,
             };
 
-            const s3ObjectTags = await s3.getObjectTagging(params).promise();
+            const s3ObjectTags = await this.s3.getObjectTagging(params).promise();
 
             let keepObject = true;
 
@@ -111,7 +132,7 @@ class S3Bucket {
                     TagSet: [ tag ]
                 }
             };
-            return s3.putObjectTagging(params).promise();
+            return this.s3.putObjectTagging(params).promise();
         });
 
         return Promise.all(addTagPromises);
@@ -141,7 +162,7 @@ class S3Bucket {
                     "IsCopy": "true"
                 }
             };
-            return s3.copyObject(params).promise();
+            return this.s3.copyObject(params).promise();
         });
 
         return Promise.all(copyObjectPromises);
@@ -155,7 +176,7 @@ class S3Bucket {
                 Bucket:   this.bucketName, 
                 Key:      this.deployPrefix + basePath, 
             };
-            return s3.getObject(params).promise();
+            return this.s3.getObject(params).promise();
         });
 
         return Promise.all(getObjectPromises);

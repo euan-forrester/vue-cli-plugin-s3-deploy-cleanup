@@ -16,6 +16,9 @@ module.exports = (api, configOptions) => {
 
       const env_override_prefix = 'VUE_APP_S3D';
 
+      options.awsProfile  = process.env[`${env_override_prefix}_AWS_PROFILE`] || options.awsProfile;
+      options.region      = process.env[`${env_override_prefix}_REGION`]      || options.region;
+      options.endpoint    = process.env[`${env_override_prefix}_ENDPOINT`]    || options.endpoint;
       options.bucket      = process.env[`${env_override_prefix}_BUCKET`]      || options.bucket;
       options.deployPath  = process.env[`${env_override_prefix}_DEPLOY_PATH`] || options.deployPath;
       options.assetPath   = process.env[`${env_override_prefix}_ASSET_PATH`]  || options.assetPath;
@@ -30,6 +33,10 @@ module.exports = (api, configOptions) => {
           Key:    override_cleanup_tag_key,
           Value:  override_cleanup_tag_value
         };
+      }
+
+      if (!options.awsProfile) {
+        options.awsProfile = 'default';
       }
 
       if (!options.bucket) {
