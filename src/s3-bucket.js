@@ -91,7 +91,9 @@ class S3Bucket {
             s3Objects = s3Objects.concat(listObjectsResult['Contents']);
         }
 
-        const s3Keys = this.getListOfKeysFromS3Bucket(s3Objects);
+        const s3KeysUrlEncoded = this.getListOfKeysFromS3Bucket(s3Objects);
+
+        const s3Keys = s3KeysUrlEncoded.map(x => decodeURIComponent(x));
 
         return this.removeDeployPrefixFromKeys(s3Keys);
     }
