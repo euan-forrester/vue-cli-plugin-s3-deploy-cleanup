@@ -22,8 +22,9 @@
   "license": "MIT",
   "private": false,
   "dependencies": {
-    "aws-sdk": "2.688.0",
-    "glob": "7.1.6"
+    "@vue/cli-shared-utils": "^4.5.15",
+    "aws-sdk": "^2.1019.0",
+    "glob": "^7.2.0"
   },
   "devDependencies": {},
   "files": [
