@@ -1,5 +1,5 @@
 const CleanBucket = require('./src/clean-bucket.js');
-const { error, warn } = require('@vue/cli-shared-utils');
+const { error, exit } = require('@vue/cli-shared-utils');
 
 module.exports = (api, configOptions) => {
   api.registerCommand(
@@ -41,16 +41,22 @@ module.exports = (api, configOptions) => {
 
       if (!options.bucket) {
         error('Bucket name must be specified with `bucket` in vue.config.js!');
+        exit(1);
       } else if (!options.deployPath) {
         error('Deploy path must be specified with `deployPath` in vue.config.js!');
+        exit(1);
       } else if (!options.assetPath) {
         error('Asset path must be specified with `assetPath` in vue.config.js!');
+        exit(1);
       } else if (!options.assetMatch) {
         error('Asset match must be specified with `assetMatch` in vue.config.js!');
+        exit(1);
       } else if (!options.acl) {
         error('Access control list must be specified with `acl` in vue.config.js!');
+        exit(1);
       } else if (!options.cleanupTag) {
         error('Tag must be specified with `cleanupTag` in vue.config.js!');
+        exit(1);
       } 
 
       const cleanBucket = new CleanBucket(options);

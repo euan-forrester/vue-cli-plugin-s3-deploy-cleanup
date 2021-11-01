@@ -1,5 +1,6 @@
 const S3Bucket = require('./s3-bucket.js');
 const FileSystem = require('./file-system.js');
+const { error, exit } = require('@vue/cli-shared-utils');
 
 class CleanBucket {
     
@@ -47,7 +48,8 @@ class CleanBucket {
             console.log('Finished tagging');
 
         } catch (e) {
-            console.log(e);
+            error(e);
+            exit(1);
         }
     }
 }
